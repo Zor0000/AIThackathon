@@ -1,0 +1,26 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Application state
+data/
+*.db
+*.db-shm
+*.db-wal
+
+# Editors and operating systems
+.DS_Store
+.vscode/
+.idea/
