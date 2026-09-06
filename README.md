@@ -1,7 +1,8 @@
-# Groundtruth
+# VeriSure
 
-A review-preparation assistant that checks self-review claims against selected
-GitHub and Jira records before drafting a source-linked manager review.
+VeriSure is a consent-led employment verification assistant for HR teams. HR records a candidate's claimed employment facts, collects a former employer's response through an approved channel, compares the two, and reviews a traceable report before making any hiring-related decision.
+
+The included Streamlit app is a **fixture-only MVP**. It simulates employer responses and does not send WhatsApp messages, contact real people, or make a hiring decision.
 
 ## Quick start
 
@@ -12,17 +13,22 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-The application starts in `fixture` mode, so no external credentials are
-required. To add integrations, copy the values from `.env.example` into the
-local `.env` file. Never commit `.env` or `.streamlit/secrets.toml`.
+Open the local URL shown by Streamlit. Create a request, confirm candidate consent, choose a fixture response, and record an HR disposition. Try the title-mismatch and unavailable-response paths as well as the matching path.
 
-## Credentials
+## Product contract
 
-- `GEMINI_API_KEY` — needed when the AI workflow is implemented.
-- `GITHUB_TOKEN` — needed only for live GitHub records; use a read-only,
-  fine-grained token scoped to the demo repository.
-- `JIRA_*` — needed only for live Jira records; use a Jira Free demo project
-  and an API token.
+| Stage | Input | Output |
+|---|---|---|
+| Create request | Candidate identity, consent confirmation, prior employer contact, claimed employer/title/dates | A traceable verification request |
+| Employer verification | Employer-provided employment status, title, and dates through an approved channel | Structured evidence, response state, and source metadata |
+| Compare | Claimed facts + employer-provided facts | Per-field match, mismatch, or incomplete result |
+| HR review | Comparison report plus clarification/context where needed | HR disposition with rationale; no automatic hire/reject action |
+| Export | Final reviewed run | Markdown verification report and audit trail |
 
-For a public demo, use fictional fixture records. The product brief is in
-`Groundtruth-Product-Brief-v1.md`.
+See [the product brief](Employment-Verification-Product-Brief-v1.md) for the full requirements, data contract, decision rules, and Mermaid flowchart. The [visual guide](Employment-Verification-Visual-Guide.html) is a standalone, fictional walkthrough for the demo.
+
+## Configuration and safety
+
+Copy `.env.example` to `.env` only when adding approved integrations. Keep `SOURCE_MODE=fixture` for the demo. Never commit credentials, candidate data, or former-employer contact details.
+
+Before any live employer outreach, ensure the candidate has consented and the organization's legal, privacy, retention, and communication policies approve the workflow. Twilio/WhatsApp integration is a future adapter, not enabled by this starter.
