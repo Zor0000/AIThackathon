@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VeriSure — Demo Flowchart</title>
+  <style>
+    :root {
+      --ink: #172d2a;
+      --muted: #5d716d;
+      --paper: #f6f6ef;
+      --white: #fffefa;
+      --line: #d5ded7;
+      --green: #176b58;
+      --mint: #d9efe5;
+      --blue: #2e5f87;
+      --blue-bg: #e8f1fa;
+      --amber: #8c5b19;
+      --amber-bg: #fff1d2;
+      --red: #a23b31;
+      --red-bg: #fde7e2;
+      --shadow: 0 10px 28px rgba(23, 45, 42, .07);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font: 15px/1.45 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    main { max-width: 1280px; margin: auto; padding: 28px 30px 46px; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; border-bottom: 1px solid var(--line); padding-bottom: 18px; }
+    .brand { font-size: 22px; font-weight: 800; letter-spacing: -.4px; }
+    .mark { display: inline-grid; place-items: center; width: 30px; height: 30px; margin-right: 8px; border-radius: 50%; background: var(--green); color: white; }
+    .eyebrow { color: var(--green); font-size: 11px; font-weight: 800; letter-spacing: 1.4px; text-transform: uppercase; }
+    .topbar small { color: var(--muted); font-size: 12px; text-align: right; }
+    h1 { max-width: 900px; margin: 28px 0 8px; font-size: clamp(31px, 4vw, 52px); line-height: 1.05; letter-spacing: -2px; }
+    .subtitle { max-width: 900px; margin: 0 0 24px; color: var(--muted); font-size: 17px; }
+    .legend { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 24px; }
+    .legend span { display: inline-flex; align-items: center; gap: 7px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--white); color: var(--muted); font-size: 12px; }
+    .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+    .dot.problem { background: var(--red); }
+    .dot.traditional { background: var(--amber); }
+    .dot.solution { background: var(--green); }
+    .dot.ai { background: var(--blue); }
+    .dot.human { background: var(--ink); }
+    .section-label { display: flex; align-items: baseline; gap: 12px; margin: 28px 0 12px; }
+    .section-label h2 { margin: 0; font-size: 22px; letter-spacing: -.5px; }
+    .section-label p { margin: 0; color: var(--muted); font-size: 13px; }
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .card { min-height: 150px; padding: 18px; border: 1px solid var(--line); border-top: 4px solid var(--green); border-radius: 12px; background: var(--white); box-shadow: var(--shadow); }
+    .card.problem { border-top-color: var(--red); }
+    .card.traditional { border-top-color: var(--amber); }
+    .card.solution { border-top-color: var(--green); }
+    .card h3 { margin: 0 0 8px; font-size: 17px; }
+    .card p { margin: 0; color: var(--muted); font-size: 13px; }
+    .card ul { margin: 8px 0 0; padding-left: 17px; color: var(--muted); font-size: 13px; }
+    .flow-wrap { padding: 20px; border: 1px solid var(--line); border-radius: 16px; background: var(--white); box-shadow: var(--shadow); }
+    .flow-row { display: grid; grid-template-columns: 1fr 28px 1fr 28px 1fr 28px 1fr; align-items: stretch; gap: 8px; }
+    .node { position: relative; min-height: 132px; padding: 15px; border: 1px solid #bdd0c3; border-radius: 11px; background: #fbfcf8; }
+    .node h3 { margin: 7px 0 5px; font-size: 16px; }
+    .node p { margin: 0; color: var(--muted); font-size: 12.5px; }
+    .node .step { color: var(--green); font-size: 10px; font-weight: 800; letter-spacing: 1.1px; }
+    .arrow { display: grid; place-items: center; color: var(--green); font-size: 25px; font-weight: 700; }
+    .ai-band { margin: 18px 0; padding: 15px 17px; border: 1px solid #b8cedf; border-radius: 11px; background: var(--blue-bg); }
+    .ai-band strong { color: var(--blue); }
+    .ai-band span { color: #466276; font-size: 13px; }
+    .ai-flow { display: grid; grid-template-columns: 1fr 28px 1fr 28px 1fr; align-items: stretch; gap: 8px; }
+    .ai-node { min-height: 124px; padding: 15px; border: 1px solid #b8cedf; border-radius: 11px; background: #f6fbff; }
+    .ai-node h3 { margin: 7px 0 5px; font-size: 15px; color: var(--blue); }
+    .ai-node p { margin: 0; color: #466276; font-size: 12.5px; }
+    .gate { margin-top: 18px; padding: 16px 18px; border: 1px solid #b7c7bd; border-radius: 11px; background: #eef3ed; }
+    .gate strong { display: block; margin-bottom: 4px; }
+    .gate p { margin: 0; color: var(--muted); font-size: 13px; }
+    .outcomes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; }
+    .outcome { padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--white); }
+    .outcome strong { display: block; margin-bottom: 4px; font-size: 14px; }
+    .outcome span { color: var(--muted); font-size: 12px; }
+    .outcome.verified { border-left: 4px solid var(--green); }
+    .outcome.review { border-left: 4px solid var(--amber); }
+    .outcome.incomplete { border-left: 4px solid var(--red); }
+    .guardrails { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .guardrail { padding: 15px; border-radius: 10px; background: var(--ink); color: white; }
+    .guardrail h3 { margin: 0 0 5px; font-size: 15px; }
+    .guardrail p { margin: 0; color: #c6d8d2; font-size: 12.5px; }
+    .speaker-note { margin-top: 22px; padding: 15px 18px; border-left: 4px solid var(--green); background: #edf7f0; color: var(--ink); }
+    .speaker-note strong { display: block; margin-bottom: 4px; }
+    .speaker-note span { color: var(--muted); font-size: 13px; }
+    @media (max-width: 850px) {
+      main { padding: 20px 16px 35px; }
+      .cards, .guardrails { grid-template-columns: 1fr; }
+      .flow-row { grid-template-columns: 1fr; }
+      .arrow { min-height: 25px; transform: rotate(90deg); }
+      .ai-flow { grid-template-columns: 1fr; }
+      .ai-flow .arrow { min-height: 24px; }
+      .outcomes { grid-template-columns: 1fr; }
+      .topbar { align-items: flex-start; flex-direction: column; }
+      .topbar small { text-align: left; }
+    }
+    @media print {
+      body { background: white; }
+      main { max-width: none; padding: 12px; }
+      .card, .flow-wrap { box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="topbar">
+      <div class="brand"><span class="mark">✓</span>VeriSure</div>
+      <small>DEMO REFERENCE · SYNTHETIC DATA · HUMAN-IN-THE-LOOP</small>
+    </div>
+
+    <div class="eyebrow" style="margin-top: 27px">Problem → approach → solution → AI-enabled workflow</div>
+    <h1>From fragmented verification to evidence-led HR review</h1>
+    <p class="subtitle">Use this flowchart as the visual backbone of the demo. Move left to right, then follow the detailed app workflow from candidate evidence to an HR-owned conclusion.</p>
+
+    <div class="legend">
+      <span><i class="dot problem"></i>Problem</span>
+      <span><i class="dot traditional"></i>Traditional approach</span>
+      <span><i class="dot solution"></i>VeriSure workflow</span>
+      <span><i class="dot ai"></i>AI assistance</span>
+      <span><i class="dot human"></i>Human decision</span>
+    </div>
+
+    <div class="section-label">
+      <div class="eyebrow">01 · Why this matters</div>
+      <h2>Start with the problem</h2>
+      <p>Set the context before opening the product.</p>
+    </div>
+    <div class="cards">
+      <article class="card problem">
+        <h3>The problem</h3>
+        <p>Employment verification is often slow, fragmented, and difficult to audit.</p>
+        <ul><li>Candidate claims and documents are reviewed separately</li><li>Former-employer responses are unstructured</li><li>Differences can become subjective decisions</li></ul>
+      </article>
+      <article class="card traditional">
+        <h3>Traditional approach</h3>
+        <p>HR works across email, spreadsheets, phone calls, and manual notes.</p>
+        <ul><li>Repeated follow-ups and manual data entry</li><li>No consistent question flow</li><li>Limited evidence traceability</li></ul>
+      </article>
+      <article class="card solution">
+        <h3>VeriSure solution</h3>
+        <p>A consent-led, evidence-based workflow that structures the process end to end.</p>
+        <ul><li>Extract and compare approved employment facts</li><li>Verify through a guided employer questionnaire</li><li>Keep the final conclusion with HR</li></ul>
+      </article>
+    </div>
+
+    <div class="section-label">
+      <div class="eyebrow">02 · Product working</div>
+      <h2>How the app works</h2>
+      <p>These are the screens to show during the demo.</p>
+    </div>
+    <div class="flow-wrap">
+      <div class="flow-row">
+        <article class="node"><div class="step">SCREEN 1</div><h3>Candidate evidence</h3><p>Upload the synthetic experience letter and confirm consent.</p></article>
+        <div class="arrow">→</div>
+        <article class="node"><div class="step">SCREEN 2</div><h3>Facts extracted</h3><p>Show employer, title, dates, and employee ID for HR review.</p></article>
+        <div class="arrow">→</div>
+        <article class="node"><div class="step">SCREEN 3</div><h3>Approved verifier</h3><p>Add the former-employer contact and initiate WhatsApp verification.</p></article>
+        <div class="arrow">→</div>
+        <article class="node"><div class="step">SCREEN 4</div><h3>Structured response</h3><p>Receive or simulate a confirmed, different, declined, or missing response.</p></article>
+      </div>
+
+      <div class="ai-band"><strong>AI in the HR system</strong><br><span>AI supports the workflow where unstructured information needs to become usable evidence. It does not make a hiring decision.</span></div>
+      <div class="ai-flow">
+        <article class="ai-node"><div class="step">AI ASSISTANCE 1</div><h3>Document understanding</h3><p>For scanned documents or images, schema-constrained OCR can identify approved fields such as employer, title, dates, and ID.</p></article>
+        <div class="arrow">→</div>
+        <article class="ai-node"><div class="step">AI ASSISTANCE 2</div><h3>Response normalization</h3><p>A natural-language verifier reply can be normalized into a structured answer, then checked by the same deterministic validator.</p></article>
+        <div class="arrow">→</div>
+        <article class="ai-node"><div class="step">CONTROL LAYER</div><h3>Rules and evidence</h3><p>Validation, sender checks, comparison logic, idempotency, and audit events remain deterministic and traceable.</p></article>
+      </div>
+
+      <div class="gate"><strong>Human review gate</strong><p>VeriSure compares the candidate evidence, extracted document facts, and former-employer response field by field. A mismatch is a prompt for HR review—not an automatic rejection or truth judgment.</p></div>
+      <div class="outcomes">
+        <div class="outcome verified"><strong>Verified</strong><span>Requested facts match the recorded employer response.</span></div>
+        <div class="outcome review"><strong>Discrepancy found</strong><span>A difference is highlighted for clarification or manual review.</span></div>
+        <div class="outcome incomplete"><strong>Unable to verify</strong><span>A decline or missing response is recorded as incomplete evidence, not as false information.</span></div>
+      </div>
+    </div>
+
+    <div class="section-label">
+      <div class="eyebrow">03 · Close the demo</div>
+      <h2>What VeriSure produces</h2>
+      <p>End on the output, not just the workflow.</p>
+    </div>
+    <div class="guardrails">
+      <article class="guardrail"><h3>Evidence comparison</h3><p>HR sees the exact field-level matches, mismatches, and unavailable values.</p></article>
+      <article class="guardrail"><h3>Human conclusion</h3><p>HR records the conclusion and rationale after reviewing the evidence.</p></article>
+      <article class="guardrail"><h3>Audit-ready report</h3><p>The report preserves the response, comparison, rationale, and audit trail.</p></article>
+    </div>
+
+    <div class="speaker-note"><strong>One-line close for the demo</strong><span>“VeriSure uses AI to structure messy HR inputs, rules to protect the evidence, and human review to own the decision.”</span></div>
+  </main>
+</body>
+</html>

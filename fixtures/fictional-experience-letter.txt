@@ -1,0 +1,9 @@
+EXPERIENCE LETTER
+
+Employer: Northstar Labs
+Job Title: Senior Software Engineer
+Employee ID: NS-1042
+Start Date: January 2022
+End Date: March 2024
+
+This file contains fictional data for the VeriSure demonstration.
