@@ -29,6 +29,8 @@ See [the product brief](Employment-Verification-Product-Brief-v1.md) for the ful
 
 ## Configuration and safety
 
-Copy `.env.example` to `.env` only when adding approved integrations. Keep `SOURCE_MODE=fixture` for the demo. Never commit credentials, candidate data, or former-employer contact details.
+Copy `.env.example` to `.env` for local configuration, or copy `.streamlit/secrets.toml.example` values into Streamlit Cloud Secrets. Keep `SOURCE_MODE=fixture` for the demo. Never commit credentials, candidate data, or former-employer contact details.
 
-Before any live employer outreach, ensure the candidate has consented and the organization's legal, privacy, retention, and communication policies approve the workflow. Twilio/WhatsApp integration is a future adapter, not enabled by this starter.
+The dependency set now includes the implementation foundation in the supplied build reference: FastAPI/Uvicorn for Twilio webhooks, Twilio for WhatsApp, LangGraph for the verification state machine, OpenAI for constrained extraction, PostgreSQL/SQLAlchemy/Alembic for durable records, and Redis/RQ for retries and timeout jobs. The current Streamlit screen remains fixture-only; installing a dependency does not activate live messaging.
+
+Before setting `SOURCE_MODE=live`, configure `DATABASE_URL`, `REDIS_URL`, all Twilio credentials, `PUBLIC_BASE_URL` (a public HTTPS API URL), and the selected LLM key/model. Twilio signature validation must stay enabled. Ensure candidate consent and the organization's legal, privacy, retention, and communication policies approve outreach before any live employer contact.
