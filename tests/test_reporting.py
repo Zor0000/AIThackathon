@@ -6,7 +6,11 @@ from pathlib import Path
 
 from pypdf import PdfReader
 
-from verisure.domain import EmployerResponseStatus, create_employment_facts
+from verisure.domain import (
+    EmployerResponseStatus,
+    HRConclusion,
+    create_employment_facts,
+)
 from verisure.report_email import (
     ReportEmailSettings,
     build_report_email_message,
@@ -92,6 +96,11 @@ class ReportingTests(unittest.TestCase):
 
     def test_completed_report_is_emailed_once(self) -> None:
         gateway = FakeReportEmailGateway()
+        self.store.close_case(
+            self.case_id,
+            HRConclusion.INFORMATION_VERIFIED,
+            "All three approved evidence sources match.",
+        )
 
         first = dispatch_completed_report(self.store, self.case_id, gateway)
         repeated = dispatch_completed_report(self.store, self.case_id, gateway)
@@ -100,6 +109,15 @@ class ReportingTests(unittest.TestCase):
         self.assertEqual(repeated.status, "SENT")
         self.assertEqual(len(gateway.sent), 1)
         self.assertEqual(self.store.report_delivery_for_case(self.case_id).status, "SENT")
+
+    def test_report_email_waits_for_hr_conclusion(self) -> None:
+        gateway = FakeReportEmailGateway()
+
+        dispatch = dispatch_completed_report(self.store, self.case_id, gateway)
+
+        self.assertEqual(dispatch.status, "AWAITING_HR_REVIEW")
+        self.assertEqual(gateway.sent, [])
+        self.assertIsNone(self.store.report_delivery_for_case(self.case_id))
 
     def test_hr_email_has_context_and_human_review_instruction(self) -> None:
         message = build_report_email_message(

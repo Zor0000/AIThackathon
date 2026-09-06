@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 
-from fastapi import BackgroundTasks, FastAPI, Header, HTTPException, Request, Response
+from fastapi import FastAPI, Header, HTTPException, Request, Response
 from dotenv import load_dotenv
 from twilio.base.exceptions import TwilioRestException
 from twilio.request_validator import RequestValidator
@@ -16,7 +16,6 @@ from verisure.messaging import (
     TwilioSettings,
     normalize_whatsapp_address,
 )
-from verisure.report_email import dispatch_completed_report
 from verisure.storage import CaseStore
 
 
@@ -67,9 +66,7 @@ def create_app(
 
     @app.post("/webhook/whatsapp")
     @app.post("/webhooks/twilio/whatsapp", include_in_schema=False)
-    async def whatsapp_webhook(
-        request: Request, background_tasks: BackgroundTasks
-    ) -> Response:
+    async def whatsapp_webhook(request: Request) -> Response:
         form = await request.form()
         payload = {key: str(value) for key, value in form.items()}
         _validate_twilio_request(request, payload, twilio_settings)
@@ -95,10 +92,6 @@ def create_app(
                 body=payload.get("Body", ""),
                 twilio_sid=payload.get("MessageSid", ""),
             )
-            if progress.completed:
-                background_tasks.add_task(
-                    dispatch_completed_report, case_store, case.case_id
-                )
             twiml.message(progress.reply)
         except (ValidationError, KeyError) as exc:
             twiml.message(f"We could not record the response: {exc}")

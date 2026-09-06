@@ -780,6 +780,13 @@ class CaseStore:
             status = VerificationStatus(row["verification_status"])
             if status is VerificationStatus.PENDING:
                 raise ValidationError(("A report can be emailed after verification completes.",))
+            if (
+                not row["hr_conclusion"]
+                or row["state"] != CaseState.HR_REVIEWED.value
+            ):
+                raise ValidationError(
+                    ("A report can be emailed after HR records a final conclusion.",)
+                )
             existing = connection.execute(
                 "SELECT 1 FROM report_deliveries WHERE case_id = ?", (case_id,)
             ).fetchone()

@@ -11,11 +11,11 @@ VeriSure is an HR-led employment background-verification application. It compare
 5. VeriSure compares all three sources field by field.
 6. VeriSure records one completed verification count for every terminal result,
    including verified, discrepancy-found, and unable-to-verify outcomes.
-7. VeriSure generates a PDF with the candidate claim, extracted document facts,
+7. HR reviews the evidence and records a final conclusion and rationale.
+8. VeriSure generates a PDF with the candidate claim, extracted document facts,
    former-employer response, and field-by-field analysis. When SMTP is configured,
    it automatically emails the PDF to `neerajchormale39@gmail.com` (or the
-   configured recipient) exactly once.
-8. HR records a conclusion and rationale, then can export the audit report.
+   configured recipient) exactly once, after the HR conclusion is recorded.
 
 The application does not make hiring decisions or automatically label information false. A decline or missing response produces `UNABLE TO VERIFY`.
 
@@ -74,11 +74,11 @@ POST https://your-public-api.example/webhook/whatsapp
 
 Outbound messages use `/webhooks/twilio/status` as their delivery callback. The public URL must exactly match the URL Twilio signs. Signature validation should remain enabled outside isolated tests.
 
-Completed reports are automatically sent from the webhook after the former employer
-finishes the questionnaire. SMTP configuration is intentionally server-side. If SMTP
+Completed reports are automatically sent only after an HR reviewer records a final
+conclusion in the dashboard. SMTP configuration is intentionally server-side. If SMTP
 is not configured, the dashboard still provides the PDF download and identifies the
-missing delivery configuration. A delivery record prevents duplicate webhooks or UI
-reruns from issuing another automatic email.
+missing delivery configuration. A delivery record prevents duplicate UI reruns from
+issuing another automatic email.
 
 ## Input error handling with AI
 

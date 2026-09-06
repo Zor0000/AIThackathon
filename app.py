@@ -299,28 +299,28 @@ def render_evidence_and_conclusion(store: CaseStore, case: CaseRecord) -> None:
         "Differences are evidence for HR review. The system does not label a candidate truthful or false."
     )
 
-    dispatch = dispatch_completed_report(store, case.case_id)
-    if dispatch.status == "SENT":
-        st.success(f"Verification PDF automatically emailed to HR: {dispatch.detail}")
-    elif dispatch.status == "FAILED":
-        st.error("The automatic HR report email failed. See the audit trail for details.")
-    elif dispatch.status == "NOT_CONFIGURED":
-        missing = ", ".join(ReportEmailSettings.from_env().missing_fields)
-        st.warning(
-            "Automatic HR email is waiting for SMTP configuration. Missing: "
-            f"{missing}. The comparison PDF is ready to download below."
-        )
-    else:
-        delivery = store.report_delivery_for_case(case.case_id)
-        if delivery and delivery.status == "SENT":
-            st.caption(f"Verification PDF was emailed to HR: {delivery.recipient}")
-        elif delivery and delivery.status == "FAILED":
-            st.error("The automatic HR report email failed. See the audit trail for details.")
-
     if case.hr_conclusion:
         st.success(f"HR conclusion: {case.hr_conclusion}")
         st.write(case.hr_rationale)
+        dispatch = dispatch_completed_report(store, case.case_id)
+        if dispatch.status == "SENT":
+            st.success(f"Verification PDF automatically emailed to HR: {dispatch.detail}")
+        elif dispatch.status == "FAILED":
+            st.error("The automatic HR report email failed. See the audit trail for details.")
+        elif dispatch.status == "NOT_CONFIGURED":
+            missing = ", ".join(ReportEmailSettings.from_env().missing_fields)
+            st.warning(
+                "Automatic HR email is waiting for SMTP configuration. Missing: "
+                f"{missing}. The comparison PDF is ready to download below."
+            )
+        else:
+            delivery = store.report_delivery_for_case(case.case_id)
+            if delivery and delivery.status == "SENT":
+                st.caption(f"Verification PDF was emailed to HR: {delivery.recipient}")
+            elif delivery and delivery.status == "FAILED":
+                st.error("The automatic HR report email failed. See the audit trail for details.")
     else:
+        st.info("The report will be emailed only after HR records a final conclusion.")
         with st.form("hr_conclusion"):
             conclusion = st.selectbox(
                 "Final HR conclusion",

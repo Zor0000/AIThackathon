@@ -153,24 +153,28 @@ def dispatch_completed_report(
 ) -> ReportDispatch:
     """Create and email one evidence report after a terminal verification result.
 
-    A database claim is made before SMTP delivery, so a repeated webhook or UI rerun
-    cannot produce another automatic send. A failed SMTP transaction is deliberately
-    retained for HR follow-up instead of being retried blindly.
+    Email delivery is held until an HR reviewer records the final conclusion. A database
+    claim then prevents a repeated UI rerun from sending a duplicate report.
     """
 
     from .domain import compare_sources
     from .reporting import build_verification_report_pdf
 
     active_gateway = gateway or ReportEmailGateway()
+    case = store.get_case(case_id)
+    if case is None:
+        return ReportDispatch("FAILED", "Verification case was not found.")
+    if not case.hr_conclusion:
+        return ReportDispatch(
+            "AWAITING_HR_REVIEW",
+            "HR must record a final conclusion before the report is emailed.",
+        )
     if not active_gateway.settings.ready:
         return ReportDispatch("NOT_CONFIGURED")
     if not store.claim_report_delivery(case_id, active_gateway.settings.recipient):
         existing = store.report_delivery_for_case(case_id)
         return ReportDispatch(existing.status if existing else "ALREADY_CLAIMED")
 
-    case = store.get_case(case_id)
-    if case is None:  # Defensive guard; the claim verified the case exists.
-        return ReportDispatch("FAILED", "Verification case was not found.")
     try:
         pdf = build_verification_report_pdf(
             case=case,
