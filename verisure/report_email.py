@@ -70,7 +70,14 @@ class ReportEmailGateway:
     def __init__(self, settings: ReportEmailSettings | None = None) -> None:
         self.settings = settings or ReportEmailSettings.from_env()
 
-    def send(self, *, case_id: str, candidate_name: str, pdf: bytes) -> str:
+    def send(
+        self,
+        *,
+        case_id: str,
+        candidate_name: str,
+        verification_status: str,
+        pdf: bytes,
+    ) -> str:
         if not self.settings.ready:
             raise ValidationError(
                 (
@@ -79,19 +86,13 @@ class ReportEmailGateway:
                 )
             )
 
-        message = EmailMessage()
-        message["Subject"] = f"Employment verification report - {case_id}"
-        message["From"] = self.settings.sender
-        message["To"] = self.settings.recipient
-        message.set_content(
-            f"The completed employment verification evidence report for {candidate_name} "
-            f"(case {case_id}) is attached for HR review."
-        )
-        message.add_attachment(
-            pdf,
-            maintype="application",
-            subtype="pdf",
-            filename=f"{case_id.lower()}-verification-report.pdf",
+        message = build_report_email_message(
+            sender=self.settings.sender,
+            recipient=self.settings.recipient,
+            case_id=case_id,
+            candidate_name=candidate_name,
+            verification_status=verification_status,
+            pdf=pdf,
         )
         with smtplib.SMTP(self.settings.host, self.settings.port, timeout=20) as client:
             if self.settings.use_tls:
@@ -99,6 +100,46 @@ class ReportEmailGateway:
             client.login(self.settings.username, self.settings.password)
             client.send_message(message)
         return self.settings.recipient
+
+
+def build_report_email_message(
+    *,
+    sender: str,
+    recipient: str,
+    case_id: str,
+    candidate_name: str,
+    verification_status: str,
+    pdf: bytes,
+) -> EmailMessage:
+    """Build a clear HR notification while keeping the conclusion human-led."""
+
+    message = EmailMessage()
+    message["Subject"] = f"HR review needed: employment verification — {case_id}"
+    message["From"] = sender
+    message["To"] = recipient
+    message.set_content(
+        "Hello HR Team,\n\n"
+        "An employment-verification evidence report is ready for your review.\n\n"
+        f"Candidate: {candidate_name}\n"
+        f"Case ID: {case_id}\n"
+        f"Evidence status: {verification_status}\n\n"
+        "Next steps:\n"
+        "1. Review the attached verification report and field-by-field comparison.\n"
+        "2. Open the VeriSure HR dashboard to record the final conclusion and rationale.\n"
+        "3. Follow your organisation's consent, privacy, and retention procedures.\n\n"
+        "This evidence status is not an automated hiring decision. Any employment "
+        "decision must be made by an authorised HR reviewer.\n\n"
+        "Regards,\n"
+        "VeriSure\n"
+        "Automated verification workflow\n"
+    )
+    message.add_attachment(
+        pdf,
+        maintype="application",
+        subtype="pdf",
+        filename=f"{case_id.lower()}-verification-report.pdf",
+    )
+    return message
 
 
 @dataclass(frozen=True, slots=True)
@@ -141,6 +182,7 @@ def dispatch_completed_report(
         recipient = active_gateway.send(
             case_id=case.case_id,
             candidate_name=case.candidate_name,
+            verification_status=case.verification_status.value,
             pdf=pdf,
         )
     except Exception as exc:

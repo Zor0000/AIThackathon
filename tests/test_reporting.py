@@ -9,6 +9,7 @@ from pypdf import PdfReader
 from verisure.domain import EmployerResponseStatus, create_employment_facts
 from verisure.report_email import (
     ReportEmailSettings,
+    build_report_email_message,
     dispatch_completed_report,
 )
 from verisure.reporting import build_verification_report_pdf
@@ -99,6 +100,28 @@ class ReportingTests(unittest.TestCase):
         self.assertEqual(repeated.status, "SENT")
         self.assertEqual(len(gateway.sent), 1)
         self.assertEqual(self.store.report_delivery_for_case(self.case_id).status, "SENT")
+
+    def test_hr_email_has_context_and_human_review_instruction(self) -> None:
+        message = build_report_email_message(
+            sender="verisure@example.test",
+            recipient="hr@example.test",
+            case_id="BV-TEST1234",
+            candidate_name="Aarav Shah",
+            verification_status="VERIFIED",
+            pdf=b"example-pdf",
+        )
+        body = message.get_body(preferencelist=("plain",))
+
+        self.assertEqual(message["Subject"], "HR review needed: employment verification — BV-TEST1234")
+        self.assertEqual(message["To"], "hr@example.test")
+        self.assertIsNotNone(body)
+        assert body is not None
+        self.assertIn("Candidate: Aarav Shah", body.get_content())
+        self.assertIn("Evidence status: VERIFIED", body.get_content())
+        self.assertIn("not an automated hiring decision", body.get_content())
+        attachments = list(message.iter_attachments())
+        self.assertEqual(len(attachments), 1)
+        self.assertEqual(attachments[0].get_filename(), "bv-test1234-verification-report.pdf")
 
 
 if __name__ == "__main__":
