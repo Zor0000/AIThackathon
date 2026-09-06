@@ -47,6 +47,28 @@ class DomainTests(unittest.TestCase):
             VerificationStatus.DISCREPANCY_FOUND,
         )
 
+    def test_employer_name_allows_spacing_and_one_character_variation(self) -> None:
+        candidate = facts(employer_name="Northstar Caps")
+        employer = facts(employer_name="north star cap")
+
+        rows = compare_sources(candidate, candidate, employer)
+
+        employer_row = next(row for row in rows if row.field == "Employer")
+        self.assertIs(employer_row.result, FieldResult.MATCH)
+        self.assertIs(
+            derive_verification_status(EmployerResponseStatus.RECEIVED, rows),
+            VerificationStatus.VERIFIED,
+        )
+
+    def test_substantially_different_employer_remains_a_mismatch(self) -> None:
+        candidate = facts(employer_name="Northstar Caps")
+        employer = facts(employer_name="Southwind Industries")
+
+        rows = compare_sources(candidate, candidate, employer)
+
+        employer_row = next(row for row in rows if row.field == "Employer")
+        self.assertIs(employer_row.result, FieldResult.MISMATCH)
+
     def test_document_difference_requires_review(self) -> None:
         rows = compare_sources(facts(), facts(end_date="2024-02"), facts())
 

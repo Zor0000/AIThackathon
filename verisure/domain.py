@@ -161,10 +161,10 @@ def compare_sources(
 
         if not employer_value:
             result = FieldResult.NOT_PROVIDED
-        elif _normalized(candidate_value) != _normalized(employer_value):
+        elif not _values_match(attribute, candidate_value, employer_value):
             result = FieldResult.MISMATCH
-        elif document_value and _normalized(document_value) != _normalized(
-            candidate_value
+        elif document_value and not _values_match(
+            attribute, document_value, candidate_value
         ):
             result = FieldResult.NEEDS_REVIEW
         else:
@@ -284,3 +284,52 @@ def render_markdown_report(
 
 def _normalized(value: str) -> str:
     return " ".join(value.casefold().split())
+
+
+def _values_match(attribute: str, left: str, right: str) -> bool:
+    """Compare facts without weakening strict checks for dates, IDs, or titles."""
+
+    if attribute != "employer_name":
+        return _normalized(left) == _normalized(right)
+    return _employer_names_match(left, right)
+
+
+def _employer_names_match(left: str, right: str) -> bool:
+    """Allow only harmless employer-name formatting or a one-character typo.
+
+    Companies are often entered with inconsistent spaces or punctuation (for example,
+    ``Northstar Caps`` and ``North Star Cap``).  Remove that formatting before
+    comparison and accept at most one remaining character edit on sufficiently long
+    names. Larger differences remain visible to HR as a mismatch.
+    """
+
+    left_compact = re.sub(r"[^\w]", "", left.casefold())
+    right_compact = re.sub(r"[^\w]", "", right.casefold())
+    if left_compact == right_compact:
+        return True
+    if min(len(left_compact), len(right_compact)) < 8:
+        return False
+    return _at_most_one_edit_apart(left_compact, right_compact)
+
+
+def _at_most_one_edit_apart(left: str, right: str) -> bool:
+    """Return whether two strings differ by one insertion, deletion, or replacement."""
+
+    if abs(len(left) - len(right)) > 1:
+        return False
+    if len(left) > len(right):
+        left, right = right, left
+
+    index_left = index_right = edits = 0
+    while index_left < len(left) and index_right < len(right):
+        if left[index_left] == right[index_right]:
+            index_left += 1
+            index_right += 1
+            continue
+        edits += 1
+        if edits > 1:
+            return False
+        if len(left) == len(right):
+            index_left += 1
+        index_right += 1
+    return True
